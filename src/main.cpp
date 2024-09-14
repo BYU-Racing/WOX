@@ -1,11 +1,17 @@
 #include <Arduino.h>
+#include <WOX.h>
 
 // put function declarations here:
 int myFunction(int, int);
 
+WOX leftWOX = WOX(1);
+WOX rightWOX = WOX(2);
+
 void setup() {
   // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(9600);
+  rightWOX.boot();
+  leftWOX.boot();
 }
 
 void loop() {
