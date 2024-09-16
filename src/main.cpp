@@ -11,6 +11,8 @@ const int lWOXpin = 5;
 WOX leftWOX = WOX(1);
 WOX rightWOX = WOX(2);
 
+
+//these need to exist since member functions are attached to a specific object instance and cannot be directly passed in
 void handleRightWOX() {
   rightWOX.addHole();
 }
