@@ -4,10 +4,10 @@
 class WOX {
     private:
         int rpm = 0;
-        int rollTime = 500;
+        int rollTime = 20;
         int seenHoles = 0;
         int wheel;
-        int lastCheck = 0;
+        uint32_t lastCheck = 0;
         FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> can;
         CAN_message_t msg;
         
