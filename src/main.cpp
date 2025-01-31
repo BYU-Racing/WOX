@@ -1,41 +1,50 @@
 #include <Arduino.h>
 #include <WOX.h>
+#include <FlexCAN_T4.h>
+#include <Reserved.h>
 
-// put function declarations here:
-volatile bool flagR = false;
-volatile bool flagL = false;
+#define RIGHT_WOX_PIN 4
+#define LEFT_WOX_PIN 5
+// Replace with Front/Rear
+#define RIGHT_WHEEL FrontRightId
+#define LEFT_WHEEL FrontLeftId
+#define SERIAL_BAUD 9600
+#define CAN_BAUD_RATE 250000
 
-const int rWOXpin = 4;
-const int lWOXpin = 5;
+FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16> dataCAN;
 
-WOX leftWOX = WOX(1);
-WOX rightWOX = WOX(2);
+WOX rightWOX = WOX(RIGHT_WHEEL);
+WOX leftWOX = WOX(LEFT_WHEEL);
 
-
-//these need to exist since member functions are attached to a specific object instance and cannot be directly passed in
-void handleRightWOX() {
-  rightWOX.addHole();
+void handleRightWOX()
+{
+    rightWOX.seen();
 }
 
-void handleLeftWOX() {
-  leftWOX.addHole();
+void handleLeftWOX()
+{
+    leftWOX.seen();
 }
 
-void setup() {
-  // put your setup code here, to run once:
-  pinMode(rWOXpin, INPUT_PULLUP);
-  pinMode(lWOXpin, INPUT_PULLUP);
+void setup()
+{
+    pinMode(RIGHT_WOX_PIN, INPUT_PULLUP); // Check signal direction
+    pinMode(LEFT_WOX_PIN, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(rWOXpin), handleRightWOX, FALLING);
-  attachInterrupt(digitalPinToInterrupt(lWOXpin), handleLeftWOX, FALLING);
+    attachInterrupt(RIGHT_WOX_PIN, handleRightWOX, FALLING); // Check signal direction
+    attachInterrupt(LEFT_WOX_PIN, handleLeftWOX, FALLING);
 
-  Serial.begin(9600);
-  rightWOX.boot();
-  leftWOX.boot();
+    Serial.begin(SERIAL_BAUD);
+
+    dataCAN.begin();
+    dataCAN.setBaudRate(CAN_BAUD_RATE);
+
+    rightWOX.boot(&dataCAN);
+    leftWOX.boot(&dataCAN);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  leftWOX.run();
-  rightWOX.run();
+void loop()
+{
+    leftWOX.run();
+    rightWOX.run();
 }

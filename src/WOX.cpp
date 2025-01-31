@@ -1,51 +1,51 @@
 #include <WOX.h>
 #include <Arduino.h>
 #include <FlexCAN_T4.h>
+#include <Reserved.h>
+#include <BufferPacker.h>
 
-
-WOX::WOX() {
-    wheel = 1;
+WOX::WOX(const uint8_t wheelId): wheelId(wheelId)
+{
 }
 
-WOX::WOX(int inWheel) {
-    wheel = inWheel;
+void WOX::boot(FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16>* can)
+{
+    this->can = can;
 }
 
-void WOX::boot() {
-    can.begin();
-    can.setBaudRate(250000);
-}
-
-
-void WOX::addHole() {
+void WOX::seen()
+{
     seenHoles++;
 }
 
-void WOX::reset() {
+void WOX::reset()
+{
     seenHoles = 0;
 }
 
-void WOX::calculateRPM() {
-    rpm = seenHoles / 12; // THIS IS PLACEHOLDER CODE
+void WOX::calculateRPM()
+{
+    // TODO: Correct count
+    // How to handle reverse?
+    rpm = seenHoles / 12;
 }
 
-
-void WOX::run() {
-    if(millis() - lastCheck >= rollTime) {
+void WOX::run()
+{
+    if (millis() - lastCheck >= interval)
+    {
         calculateRPM();
         sendCAN();
         reset();
     }
-    return;
 }
 
-
-void WOX::sendCAN() {
-
-    msg.id = 44 + wheel;
-
-    msg.buf[0] = rpm / 100;
-    msg.buf[1] = (rpm - ((rpm / 100) * 100));
-
-    can.write(msg);
+void WOX::sendCAN()
+{
+    msg.id = TireRPMId;
+    msg.buf[0] = wheelId;
+    BufferPacker<3> packer(msg.buf);
+    packer.skip<uint8_t>();
+    packer.pack(rpm);
+    can->write(msg);
 }
