@@ -8,8 +8,12 @@
 #define MIN_PULSE_INTERVAL 5
 #define MS_PER_MIN 60000.0f
 #define MS_PER_MAGNET MS_PER_MIN / MAGNET_COUNT
+
+// DECAY_INTERVAL_FACTOR is calculated as MIN + (MAX - MIN) * (rpm / MAX_RPM)
 // RPM takes (DECAY_INTERVAL_FACTOR x last pulse interval) milliseconds to decay to 0
-#define DECAY_INTERVAL_FACTOR 2.0f
+#define MAX_RPM 3000.0f
+#define DECAY_FACTOR_MIN 1.2f
+#define DECAY_FACTOR_MAX 5.0f
 
 void WOX::boot(FlexCAN_T4<CAN2, RX_SIZE_256, TX_SIZE_16>* can)
 {
@@ -37,7 +41,8 @@ void WOX::calculateRPM()
         // Process most recent detection
         if (pulseInterval_ms > 0)
         {
-            rpm = MS_PER_MAGNET / pulseInterval_ms;
+            // Running avg for smoother rpm speedups - can help against signal bounces
+            rpm = (rpm + MS_PER_MAGNET / pulseInterval_ms) / 2.0f;
         }
         pulseFlag = false;
         lastDecay_ms = now;
@@ -46,10 +51,21 @@ void WOX::calculateRPM()
 
     if (rpm == 0 || pulseInterval_ms == 0) return;
 
-    // Decay RPM
-    const float decayRate = rpm / (DECAY_INTERVAL_FACTOR * pulseInterval_ms);
-    const float decay = decayRate * (now - lastDecay_ms);
-    if (rpm > decay && rpm - decay > 0)
+    // The effective rate at which the current RPM should decay (higher for higher RPMs)
+    float effectiveDecay = DECAY_FACTOR_MIN + (DECAY_FACTOR_MAX - DECAY_FACTOR_MIN) * (rpm / MAX_RPM);
+
+    // clamp decay to max and mins
+    if (effectiveDecay < DECAY_FACTOR_MIN)
+    {
+        effectiveDecay = DECAY_FACTOR_MIN;
+    }
+    if (effectiveDecay > DECAY_FACTOR_MAX)
+    {
+        effectiveDecay = DECAY_FACTOR_MAX;
+    }
+    // The actual decay rate given the current pulseInterval
+    const float decayRate = rpm / (effectiveDecay * pulseInterval_ms);
+    if (const float decay = decayRate * (now - lastDecay_ms); rpm > decay && rpm - decay > 0)
     {
         rpm -= decay;
     } else
@@ -61,12 +77,14 @@ void WOX::calculateRPM()
 
 void WOX::sendCAN()
 {
-    msg.id = TireRPMId;
-    msg.buf[0] = wheelId;
-    BufferPacker<sizeof(uint8_t) + sizeof(float)> packer(msg.buf);
-    packer.skip<uint8_t>();
-    packer.pack(rpm);
-    can->write(msg);
+    // msg.id = TireRPMId;
+    // msg.buf[0] = wheelId;
+    // BufferPacker<sizeof(uint8_t) + sizeof(float)> packer(msg.buf);
+    // packer.skip<uint8_t>();
+    // packer.pack(rpm);
+    // can->write(msg);
+    Serial.print("RPM: ");
+    Serial.println(rpm);
 }
 
 void WOX::run()
