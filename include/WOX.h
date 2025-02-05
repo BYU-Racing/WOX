@@ -18,6 +18,7 @@ private:
     volatile uint32_t currentPulse_ms = 0;
     volatile uint32_t lastPulse_ms = 0;
     volatile uint32_t pulseInterval_ms = 0;
+    float lastRpmRaw = 0;
     float rpm = 0;
     uint32_t lastDecay_ms = 0;
     uint32_t lastSent_ms = 0;

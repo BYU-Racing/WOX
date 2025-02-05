@@ -9,6 +9,10 @@
 #define MS_PER_MIN 60000.0f
 #define MS_PER_MAGNET MS_PER_MIN / MAGNET_COUNT
 
+// Weighted Average Weights
+#define HEAVY 0.8f
+#define LIGHT 0.2f
+
 // DECAY_INTERVAL_FACTOR is calculated as MIN + (MAX - MIN) * (rpm / MAX_RPM)
 // RPM takes (DECAY_INTERVAL_FACTOR x last pulse interval) milliseconds to decay to 0
 #define MAX_RPM 3000.0f
@@ -41,8 +45,10 @@ void WOX::calculateRPM()
         // Process most recent detection
         if (pulseInterval_ms > 0)
         {
-            // Running avg for smoother rpm speedups - can help against signal bounces
-            rpm = (rpm + MS_PER_MAGNET / pulseInterval_ms) / 2.0f;
+            // Weighted average of last two raw values, without asymptotic behavior
+            const float rpmRaw = MS_PER_MAGNET / pulseInterval_ms;
+            rpm = (LIGHT * lastRpmRaw) + (HEAVY * rpmRaw);
+            lastRpmRaw = rpmRaw;
         }
         pulseFlag = false;
         lastDecay_ms = now;
