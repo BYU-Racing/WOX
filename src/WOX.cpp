@@ -44,7 +44,7 @@ void WOX::calculateRPM()
         return;
     }
 
-    if (rpm == 0) return;
+    if (rpm == 0 || pulseInterval_ms == 0) return;
 
     // Decay RPM
     const float decayRate = rpm / (DECAY_INTERVAL_FACTOR * pulseInterval_ms);
