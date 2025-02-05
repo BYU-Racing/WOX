@@ -77,14 +77,12 @@ void WOX::calculateRPM()
 
 void WOX::sendCAN()
 {
-    // msg.id = TireRPMId;
-    // msg.buf[0] = wheelId;
-    // BufferPacker<sizeof(uint8_t) + sizeof(float)> packer(msg.buf);
-    // packer.skip<uint8_t>();
-    // packer.pack(rpm);
-    // can->write(msg);
-    Serial.print("RPM: ");
-    Serial.println(rpm);
+    msg.id = TireRPMId;
+    msg.buf[0] = wheelId;
+    BufferPacker<sizeof(uint8_t) + sizeof(float)> packer(msg.buf);
+    packer.skip<uint8_t>();
+    packer.pack(rpm);
+    can->write(msg);
 }
 
 void WOX::run()
