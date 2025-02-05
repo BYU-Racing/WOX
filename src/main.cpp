@@ -3,8 +3,8 @@
 #include <FlexCAN_T4.h>
 #include <Reserved.h>
 
-#define RIGHT_WOX_PIN 4
-#define LEFT_WOX_PIN 5
+#define RIGHT_WOX_PIN 2
+#define LEFT_WOX_PIN 3
 // Replace with Front/Rear
 #define RIGHT_WHEEL FrontRightId
 #define LEFT_WHEEL FrontLeftId
@@ -28,11 +28,11 @@ void handleLeftWOX()
 
 void setup()
 {
-    pinMode(RIGHT_WOX_PIN, INPUT_PULLUP); // Check signal direction
-    pinMode(LEFT_WOX_PIN, INPUT_PULLUP);
+    pinMode(RIGHT_WOX_PIN, INPUT_PULLDOWN);
+    pinMode(LEFT_WOX_PIN, INPUT_PULLDOWN);
 
-    attachInterrupt(RIGHT_WOX_PIN, handleRightWOX, FALLING); // Check signal direction
-    attachInterrupt(LEFT_WOX_PIN, handleLeftWOX, FALLING);
+    attachInterrupt(RIGHT_WOX_PIN, handleRightWOX, RISING);
+    attachInterrupt(LEFT_WOX_PIN, handleLeftWOX, RISING);
 
     Serial.begin(SERIAL_BAUD);
 
@@ -45,6 +45,6 @@ void setup()
 
 void loop()
 {
-    leftWOX.run();
     rightWOX.run();
+    leftWOX.run();
 }
