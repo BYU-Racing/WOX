@@ -37,6 +37,7 @@ void WOX::run()
         calculateRPM();
         sendCAN();
         reset();
+        lastCheck = millis();
     }
 }
 
